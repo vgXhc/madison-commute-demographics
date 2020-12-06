@@ -1,0 +1,92 @@
+---
+title: "Who gets to work how?"
+author: "Harald Kliems"
+date: "12/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Prelude
+
+I'll be using the CTPPr package to access data from the Census Transportation Planning Products. 
+```{r}
+library(tidyverse)
+library(CTPPr)
+
+```
+First, I have to identify the relevant tables. I'm interested in means of transportation to work by race/ethnicity and by income. The `ctpp_tables` command provides an interactive way to identify the right tables. 
+```{r identify-tables}
+ctpp_tables()
+```
+However, I don't find this terribly user friendly and would rather use the CTPP [table browser](http://data5.ctpp.transportation.org/ctpp1216/Browse/browsetables.aspx).
+
+It appears the two relevant tables are:
+
+- `B102201` - Minority Status (3) by Means of Transportation (11) (Workers 16 years and over) 
+- `B103203` - Household income in the past 12 months (2016 $) (26) by Means of transportation (11) (Workers 16 years and over in households)
+
+For the latter, there is also "B103202 - Median Household Income in the last 12 months (2016 $) (1) by Means of Transportation (11) for Workers (Workers 16 years and over in households) - Large Geos Only" -- it's not clear what the difference is, and I will have to do some data exploration.
+
+```{r download-data}
+minority_commute <- download_ctpp(
+  id = "B102201",
+  dataset = "2016",
+  geography = "City",
+  state = "Wisconsin",
+  output = "Name" #actual names
+)
+```
+
+Filter to only include Madison:
+```{r}
+minority_commute_msn <- minority_commute %>% 
+  filter(RESIDENCE == "Madison city, WI; Madison, WI Metro Area")
+```
+
+Minority status is dichotomized into non-Hispanic White and everyone else:
+```{r}
+unique(minority_commute_msn$`Minority Status 3`)
+```
+Commute mode share is split into
+```{r}
+unique(minority_commute_msn$`Means of Transportation 11`)
+```
+The table reports absolute numbers, which isn't super helpful:
+```{r}
+minority_commute_msn %>% 
+  filter(`Means of Transportation 11` == "Bicycle") %>% 
+  ggplot(aes(x = `Minority Status 3`, y = Estimate)) +
+  geom_col()
+```
+
+To get to percentages, we have to divide the estimates for each minority status by their respective totals. This requires the data to be wider.
+
+```{r}
+x <- minority_commute_msn %>% 
+  pivot_wider(names_from = "Minority Status 3", 
+              values_from = c("Estimate", "SE"),
+              id_cols = "Means of Transportation 11")
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
