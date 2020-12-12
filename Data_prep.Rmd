@@ -37,38 +37,81 @@ minority_commute <- download_ctpp(
   state = "Wisconsin",
   output = "Name" #actual names
 )
+
+# fix columns names
+minority_commute <- minority_commute %>% 
+  rename("residence" = "RESIDENCE",
+         "minority_status" = "Minority Status 3",
+         "transpo_mode" = "Means of Transportation 11",
+         "estimate" = "Estimate") %>% 
+  mutate(minority_status = case_when(minority_status == "White alone, not Hispanic/Latino" ~ "non-Hispanic White",
+                                     TRUE ~ minority_status))
 ```
 
 Filter to only include Madison:
 ```{r}
 minority_commute_msn <- minority_commute %>% 
-  filter(RESIDENCE == "Madison city, WI; Madison, WI Metro Area")
+  filter(residence == "Madison city, WI; Madison, WI Metro Area")
 ```
 
 Minority status is dichotomized into non-Hispanic White and everyone else:
 ```{r}
-unique(minority_commute_msn$`Minority Status 3`)
+unique(minority_commute_msn$minority_status)
 ```
 Commute mode share is split into
 ```{r}
-unique(minority_commute_msn$`Means of Transportation 11`)
+unique(minority_commute_msn$transpo_mode)
 ```
 The table reports absolute numbers, which isn't super helpful:
 ```{r}
 minority_commute_msn %>% 
-  filter(`Means of Transportation 11` == "Bicycle") %>% 
-  ggplot(aes(x = `Minority Status 3`, y = Estimate)) +
+  filter(transpo_mode == "Bicycle") %>% 
+  ggplot(aes(x = minority_status, y = estimate)) +
   geom_col()
 ```
 
 To get to percentages, we have to divide the estimates for each minority status by their respective totals. This requires the data to be wider.
 
 ```{r}
+
+minority_commute_msn %>% 
+  group_by(transpo_mode, minority_status) %>% 
+  summarize(sum(estimate))
+
 x <- minority_commute_msn %>% 
-  pivot_wider(names_from = "Minority Status 3", 
-              values_from = c("Estimate", "SE"),
-              id_cols = "Means of Transportation 11")
+  pivot_wider(names_from = minority_status, 
+              values_from = estimate,
+              id_cols = transpo_mode) %>% 
+  rename("white_total" = "non-Hispanic White",
+         "total" = "Total persons",
+         "other_total" = "Other")
+y <- x %>% 
+  pivot_longer(2:4, names_to = "measure", values_to = "estimate")
+  
+
+ 
+totals <- minority_commute_msn %>% 
+  filter(transpo_mode == "Total, means of transportation") %>% 
+  rename("total" = "estimate") %>% 
+  select(minority_status, total)
+
+minority_commute_msn <- minority_commute_msn %>% 
+  left_join(totals, by = "minority_status") %>% 
+  mutate(estimate_pct = estimate/total)
 ```
+
+```{r}
+library(hrbrthemes)
+minority_commute_msn %>% 
+  filter(transpo_mode != "Total, means of transportation") %>% 
+  ggplot(aes(reorder(transpo_mode, estimate_pct), estimate_pct)) +
+  geom_point() +
+  geom_text(aes(label = round(estimate_pct, 2)*100), nudge_y = 0.1) +
+  facet_wrap(~minority_status) +
+  coord_flip() +
+  theme_ipsum()
+```
+
 
 
 ## R Markdown
