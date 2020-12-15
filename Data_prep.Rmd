@@ -124,7 +124,7 @@ minority_commute_msn %>%
                      palette = "Set3") +
   labs(x = element_blank(),
        y = "Commute mode share", 
-       title = "Commute mode share by minority status",
+       title = "Madison commute mode share by minority status",
        color = "Minority status")+
   #facet_wrap(~minority_status) +
   coord_flip() +
@@ -149,6 +149,7 @@ income_commute <- income_commute %>%
          "hh_income" = "Household Income in the Past 12 Months 2016 26",
          "transpo_mode" = "Means of Transportation 11",
          "estimate" = "Estimate") %>% 
+  mutate(hh_income = ifelse(hh_income == "Total, household income", "Total", hh_income)) %>% 
   mutate(hh_income = factor(hh_income, unique(hh_income)))
 ```
 
@@ -192,10 +193,35 @@ income_commute_msn %>%
                                   "$100-125k" = c("$100,000-$124,999"),
                                   "$125-150k" = c("$125,000-$149,999"),
                                   ">$150k" = c("$150,000 or more"))) %>% 
+  mutate(transpo_mode = fct_collapse(transpo_mode,
+                                     "Drove alone" = "Car, truck, or van -- Drove alone",
+                                     Bus = "Bus or trolley bus",
+                                     Biked = "Bicycle",
+                                     Carpooled = c("Car, truck, or van -- In a 2-person carpool",
+                                                 "Car, truck, or van -- In a 3-or-more person carpool"),
+                                     other = c("Railroad or ferryboat",
+                                               "Streetcar, trolley car, subway, or elevated",
+                                               "Taxicab, motorcycle or other method"))) %>%
+  filter(!(transpo_mode %in% c("Total, means of transportation",
+                               "other"))) %>% 
   group_by(hh_income, transpo_mode) %>% 
   summarize(estimate = sum(estimate)) %>% 
+  mutate(transpo_mode = reorder(transpo_mode, estimate),
+         transpo_mode = fct_relevel(transpo_mode, "Carpooled", after = 4)) %>% #move drove alone and carpooled next to each other
   ggplot(aes(hh_income, estimate, fill = transpo_mode)) +
   geom_col(position = "fill") +
-  coord_flip()
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(type = "qual",
+                     palette = "Set3") +
+  labs(x = element_blank(),
+       y = "Commute mode share", 
+       title = "Madison commute mode share by household income",
+       fill = "Commute mode",
+       caption = "Data: Census Transportation Planning Products 2012-16 
+               Visualization: Harald Kliems")+
+  #facet_wrap(~minority_status) +
+  coord_flip() +
+  theme_ft_rc() +
+  theme(panel.grid.major.y = element_blank())
 ```
 
