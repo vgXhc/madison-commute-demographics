@@ -61,7 +61,7 @@ minority_commute_msn <- minority_commute_msn %>%
   mutate(estimate_pct = estimate/total)
 ```
 
-```{r}
+```{r preview=TRUE}
 library(hrbrthemes)
 
 # collapsing infrequent modes
