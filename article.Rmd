@@ -10,7 +10,9 @@ date: "`r Sys.Date()`"
 repository_url: https://github.com/vgXhc/madison-commute-demographics
 compare_updates_url:
 creative_commons: CC BY-SA
-output: distill::distill_article
+output: 
+  distill::distill_article:
+    self_contained: false
 ---
 
 How do people get to work and back in Madison? And how does this differ for people of different economic status and racial and ethnic backgrounds? I had some idea about what this looked like at the national level, but I was always curious what the numbers would be for Madison. I have previously written about [commute mode share in Madison over time](https://www.madisonbikes.org/2020/09/biking-numbers-in-madison-not-so-great/), based on data from the American Community Survey (ACS). The ACS does have detailed information on race, ethnicity, and income, but what is publicly available on the ACS website doesn't lend itself to this type of analysis. Fortunately, there is another data source: CTPP. This stands for [Census Transportation Planning Products](https://ctpp.transportation.org/), "a State DOT-funded, cooperative program that produces special tabulations of American Community Survey (ACS) data that have enhanced value for transportation planning, analysis, and strategic direction." So same data source, but organized in a different way. And the latest data available is for 2012–2016.
