@@ -5,28 +5,20 @@ description: |
 author:
   - name: Harald Kliems 
     orcid_id: 0000-0003-2542-0047
-    url: https://datenecke.netlify.app/
+    url: https://haraldkliems.netlify.app/
 date: "`r Sys.Date()`"
 repository_url: https://github.com/vgXhc/madison-commute-demographics
-compare_updates_url: https://github.com/vgXhc/madison-commute-demographics/tree/main
+compare_updates_url:
 creative_commons: CC BY-SA
 output: distill::distill_article
 ---
 
-If you spend enough time attending public input meetings at a city, it is almost certain you will encounter statements like:
-
-> "We shouldn't make it harder to drive. Poor people need to drive to their jobs."
-
-> "Bike lanes are for wealthy white guys."
-
-> "People of color don't bike."
-
-I knew what the data on mode share look like at the national level, but I was always curious what the numbers would be for Madison. I have previously written about [commute mode share in Madison over time](https://www.madisonbikes.org/2020/09/biking-numbers-in-madison-not-so-great/), based on data from the American Community Survey (ACS). The ACS does have detailed information on race, ethnicity, and income, but what is publicly available on the ACS website doesn't lend itself to this type of analysis. Fortunately, there is another data source: CTPP. This stands for [Census Transportation Planning Products](https://ctpp.transportation.org/), "a State DOT-funded, cooperative program that produces special tabulations of American Community Survey (ACS) data that have enhanced value for transportation planning, analysis, and strategic direction." So same data source, but split up in a different way. 
+How do people get to work and back in Madison? And how does this differ for people of different economic status and racial and ethnic backgrounds? I had some idea about what this looked like at the national level, but I was always curious what the numbers would be for Madison. I have previously written about [commute mode share in Madison over time](https://www.madisonbikes.org/2020/09/biking-numbers-in-madison-not-so-great/), based on data from the American Community Survey (ACS). The ACS does have detailed information on race, ethnicity, and income, but what is publicly available on the ACS website doesn't lend itself to this type of analysis. Fortunately, there is another data source: CTPP. This stands for [Census Transportation Planning Products](https://ctpp.transportation.org/), "a State DOT-funded, cooperative program that produces special tabulations of American Community Survey (ACS) data that have enhanced value for transportation planning, analysis, and strategic direction." So same data source, but organized in a different way. And the latest data available is for 2012–2016.
 
 <aside>I recommend reading my other article on bike mode share in Madison to get a sense of the limitations of ACS data. It only captures commute trips, and the margins of error can be sizable.</aside>
 
 # Commuting and minority status
-The way CTPP treats race and ethnicity is by putting people into two categories: White people who aren't LatinX/Hispanic, and everyone else. There are all kinds of issues with splitting things up this way, but using a more fine-grained approach to race and ethnicity would lead to small groups in each category and less reliable data.
+The way CTPP treats race and ethnicity is by putting people into two categories: White people who aren't Latinx/Hispanic, and everyone else. There are all kinds of issues with splitting things up this way, but using a more fine-grained approach to race and ethnicity would lead to small groups in each category and less reliable data.
 
 ```{r}
 library(tidyverse)
@@ -99,8 +91,10 @@ minority_commute_msn_collapsed %>%
                      palette = "Set2") +
   labs(x = element_blank(),
        y = "Commute mode share", 
-       title = "Madison commute mode share by minority status",
-       color = "Minority status")+
+       title = "Madison commute mode share\n by minority status",
+       color = "Minority status",
+       caption = "Data: Census Transportation Planning Products 2012-16 
+               Visualization: Harald Kliems")+
   #facet_wrap(~minority_status) +
   coord_flip() +
   theme_ft_rc() +
@@ -122,7 +116,7 @@ minority_commute_msn_collapsed %>%
   #mutate(diff = cell_spec(diff, color = spec_color(diff))) %>% 
   mutate(across(2:5, ~ percent(.x, accuracy = 0.1))) %>%
   kbl(col.names = c("Commute mode", "Non-Hispanic White", "Racial/ethnic minority", "Total", "Difference"), escape = F) %>% 
-  kable_material_dark(full_width = F)
+  kable_minimal(full_width = F)
 ```
 
 The rightmost column shows the difference in percentage points between the two population groups (i.e. the distance between the two dots on the previous plot). That difference is largest for driving to work alone: The rate of driving alone is almost 10 percentage points higher for non-Hispanic White commuters. Depending on what question we're trying to answer, it may be more useful to put this difference in the context of overall commute rates. Yes, there is a large difference in driving alone rates, but it also the overall most common commute mode. Compare that to bus commuters: The rate of bus commuting for people belonging to a racial or ethnic minority is _twice as high_ as that for non-Hispanic White commuters, 15.4% versus 7.7%. With the difference in the reverse direction, the rate of bike commuters and people working from home is close to twice as high for non-Hispanic White workers. The only mode where rates are more or less the same for both groups is walking to work, at around 10 percent.
@@ -212,9 +206,9 @@ income_commute_msn %>%
   scale_y_continuous(labels = scales::percent) +
   scale_fill_brewer(type = "qual",
                      palette = "Set3") +
-  labs(x = element_blank(),
+  labs(x = "Household income",
        y = "Commute mode share", 
-       title = "Madison commute mode share by household income",
+       title = "Madison commute mode share\n by household income",
        fill = "Commute mode",
        caption = "Data: Census Transportation Planning Products 2012-16 
                Visualization: Harald Kliems")+
